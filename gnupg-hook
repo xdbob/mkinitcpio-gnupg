@@ -1,0 +1,79 @@
+#!/usr/bin/ash
+
+run_earlyhook() {
+    mkdir -m 0700 /tmp/gpg
+    echo "pinentry-program /usr/bin/pinentry-tty" > /tmp/gpg/gpg-agent.conf
+}
+
+run_hook() {
+    mktmp() {
+        i=1
+        while [ -e /tmp/$i ]; do
+            i=$(($i + 1))
+        done
+        echo -n "/tmp/$i"
+    }
+
+    get_file() {
+        IFS=: read ckdev ckarg1 ckarg2 ckarg3 <<EOF
+$1
+EOF
+        if [ "$ckdev" = "rootfs" ];then
+            echo -n "$ckarg1"
+            if [ -n "$ckarg2" ]; then
+                echo -n ":$ckarg2"
+            fi
+        elif resolved=$(resolve_device "${ckdev}" ${rootdelay}); then
+            file=$(mktmp)
+            case ${ckarg1} in
+                *[!0-9]*)
+                    # Use a file on the device
+                    # ckarg1 is not numeric: ckarg1=filesystem, ckarg2=path
+                    mkdir /ckey
+                    mount -r -t "$ckarg1" "$resolved" /ckey
+                    dd if="/ckey/$ckarg2" of="$file" >/dev/null 2>&1
+                    umount /ckey
+                    ;;
+                *)
+                    # Read raw data from the block device
+                    # ckarg1 is numeric: ckarg1=offset, ckarg2=length
+                    dd if="$resolved" of="$file" bs=1 skip="$ckarg1" count="$ckarg2" >/dev/null 2>&1
+                    ;;
+            esac
+            echo -n "$file"
+            if [ -n "$ckarg3" ]; then
+                echo -n ":$ckarg3"
+            fi
+        fi
+    }
+
+    if [ -n "$gpg_import" ]; then
+        while [ -n "$gpg_import" ]; do
+            IFS=\; read file gpg_import <<EOF
+$gpg_import
+EOF
+            gpg --homedir /tmp/gpg --import $(get_file "$file")
+        done
+    fi
+
+    if [ -n "$gpg_decrypt" ]; then
+        gpg --homedir /tmp/gpg --card-status &> /dev/null
+        while [ -n "$gpg_decrypt" ]; do
+            IFS=\; read file gpg_decrypt <<EOF
+$gpg_decrypt
+EOF
+            IFS=: read in_file out_file <<EOF
+$(get_file "$file")
+EOF
+            [ ! -f ${in_file} ] && echo "Could not open ciphered file, aborting."
+            gpg --homedir /tmp/gpg -o $out_file --decrypt $in_file
+        done
+    fi
+}
+
+run_cleanuphook()
+{
+    killall -9 gpg-agent scdaemon pcscd &> /dev/null
+}
+
+# vim: set ft=sh ts=4 sw=4 et:

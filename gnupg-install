@@ -1,0 +1,21 @@
+#!/bin/bash
+
+build() {
+    local mod
+
+    add_binary "gpg"
+    add_binary "gpg-agent"
+    add_binary "pinentry-tty"
+    add_binary "pcscd"
+    add_binary "/usr/lib/gnupg/scdaemon"
+
+    add_runscript
+}
+
+help() {
+    cat <<HELPEOF
+TODO
+HELPEOF
+}
+
+# vim: set ft=sh ts=4 sw=4 et:
