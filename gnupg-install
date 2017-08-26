@@ -14,7 +14,19 @@ build() {
 
 help() {
     cat <<HELPEOF
-TODO
+This hook allows to use gnupg to decrypt multiple files.
+
+Options (fetched from the kernel command line):
+* gpg_decrypt=FSTYPE:encryptedfilepath:decryptedfilepath
+* gpg_import=FSTYPE:gpg-key
+
+Notes:
+* FSTYPE: can be 'rootfs' for the current intramfs
+* decryptedfilepath: will be in the current initramfs
+* Multiple files can be provided using ';' as a separator
+
+Example:
+gpg_decrypt=rootfs:/etc/keyfile.gpg:/tmp/keyfile;ext2:/dev/sda1:/encryptedkey:/etc/decryptedkey gpg_import=rootfs:/etc/public.asc
 HELPEOF
 }
 
