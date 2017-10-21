@@ -15,7 +15,7 @@ run_hook() {
     }
 
     get_file() {
-        IFS=: read ckdev ckarg1 ckarg2 ckarg3 <<EOF
+        IFS=: read -r ckdev ckarg1 ckarg2 ckarg3 <<EOF
 $1
 EOF
         if [ "$ckdev" = "rootfs" ];then
@@ -23,7 +23,7 @@ EOF
             if [ -n "$ckarg2" ]; then
                 echo -n ":$ckarg2"
             fi
-        elif resolved=$(resolve_device "${ckdev}" ${rootdelay}); then
+        elif resolved=$(resolve_device "${ckdev}" "${rootdelay}"); then
             file=$(mktmp)
             case ${ckarg1} in
                 *[!0-9]*)
@@ -49,10 +49,10 @@ EOF
 
     if [ -n "$gpg_import" ]; then
         while [ -n "$gpg_import" ]; do
-            IFS=\; read file gpg_import <<EOF
+            IFS=\; read -r file gpg_import <<EOF
 $gpg_import
 EOF
-            gpg --homedir /tmp/gpg --import $(get_file "$file")
+            gpg --homedir /tmp/gpg --import "$(get_file "$file")"
         done
     fi
 
@@ -62,11 +62,11 @@ EOF
             IFS=\; read file gpg_decrypt <<EOF
 $gpg_decrypt
 EOF
-            IFS=: read in_file out_file <<EOF
+            IFS=: read -r in_file out_file <<EOF
 $(get_file "$file")
 EOF
-            [ ! -f ${in_file} ] && echo "Could not open ciphered file, aborting."
-            gpg --homedir /tmp/gpg -o $out_file --decrypt $in_file
+            [ ! -f "${in_file}" ] && echo "Could not open ciphered file, aborting."
+            gpg --homedir /tmp/gpg -o "$out_file" --decrypt "$in_file"
         done
     fi
 }
