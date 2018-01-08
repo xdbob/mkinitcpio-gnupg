@@ -47,6 +47,7 @@ EOF
         fi
     }
 
+    export GPG_TTY=/dev/tty0
     if [ -n "$gpg_import" ]; then
         while [ -n "$gpg_import" ]; do
             IFS=\; read file gpg_import <<EOF
