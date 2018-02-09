@@ -9,7 +9,7 @@ run_hook() {
     mktmp() {
         i=1
         while [ -e /tmp/$i ]; do
-            i=$(($i + 1))
+            i=$((i + 1))
         done
         echo -n "/tmp/$i"
     }
@@ -23,7 +23,7 @@ EOF
             if [ -n "$ckarg2" ]; then
                 echo -n ":$ckarg2"
             fi
-        elif resolved=$(resolve_device "${ckdev}" ${rootdelay}); then
+        elif resolved=$(resolve_device "${ckdev}" "${rootdelay}"); then
             file=$(mktmp)
             case ${ckarg1} in
                 *[!0-9]*)
@@ -53,7 +53,7 @@ EOF
             IFS=\; read file gpg_import <<EOF
 $gpg_import
 EOF
-            gpg --homedir /tmp/gpg --import $(get_file "$file")
+            gpg --homedir /tmp/gpg --import "$(get_file "$file")"
         done
     fi
 
@@ -66,8 +66,8 @@ EOF
             IFS=: read in_file out_file <<EOF
 $(get_file "$file")
 EOF
-            [ ! -f ${in_file} ] && echo "Could not open ciphered file, aborting."
-            gpg --homedir /tmp/gpg -o $out_file --decrypt $in_file
+            [ ! -f "${in_file}" ] && echo "Could not open ciphered file, aborting."
+            gpg --homedir /tmp/gpg -o "$out_file" --decrypt "$in_file"
         done
     fi
 }
